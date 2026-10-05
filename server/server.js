@@ -19,21 +19,28 @@ connectDB();
 
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: true,
+    credentials: true,
   })
 );
 
 app.use(express.json());
 
 app.get("/", (req, res) => {
-  res.send("TaskFlow Backend Server Running...");
+  res.json({
+    message: "TaskFlow Backend Server Running...",
+  });
 });
 
 app.use("/api/auth", authRoutes);
 app.use("/api/tasks", taskRoutes);
 
-const PORT = process.env.PORT || 5000;
+if (require.main === module) {
+  const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+}
+
+module.exports = app;
