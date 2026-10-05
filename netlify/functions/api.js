@@ -1,15 +1,10 @@
+const serverless = require("serverless-http");
 const express = require("express");
 const cors = require("cors");
-const dotenv = require("dotenv");
 
-const connectDB = require("../server/config/db");
-const authRoutes = require("../server/routes/authRoutes");
-const taskRoutes = require("../server/routes/taskRoutes");
-
-// Local development-க்கு server/.env load ஆகும்
-dotenv.config({
-  path: "./server/.env",
-});
+const connectDB = require("../../server/config/db");
+const authRoutes = require("../../server/routes/authRoutes");
+const taskRoutes = require("../../server/routes/taskRoutes");
 
 const app = express();
 
@@ -36,7 +31,7 @@ app.use(express.json());
 // TEST ROUTE
 // =========================
 
-app.get("/", (req, res) => {
+app.get("/api", (req, res) => {
   res.json({
     message: "TaskFlow Backend API is running!",
   });
@@ -50,7 +45,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/tasks", taskRoutes);
 
 // =========================
-// EXPORT FOR VERCEL
+// NETLIFY FUNCTION
 // =========================
 
-module.exports = app;
+module.exports.handler = serverless(app);

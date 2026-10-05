@@ -1,0 +1,9 @@
+[build]
+  command = "npm run build"
+  publish = "my-react-app/dist"
+  functions = "netlify/functions"
+
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/api/api/:splat"
+  status = 200
