@@ -425,6 +425,14 @@ button {
     border-radius: 18px;
   }
 }
-
+.success-message {
+  padding: 12px 14px;
+  margin-bottom: 20px;
+  border-radius: 10px;
+  background: #effaf3;
+  border: 1px solid #ccebd6;
+  color: #27834b;
+  font-size: 13px;
+}
 
 

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import api from "../api/axios";
 
 function Login({ onRegister, onLoginSuccess }) {
@@ -6,6 +6,38 @@ function Login({ onRegister, onLoginSuccess }) {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // =========================
+  // GOOGLE LOGIN SCRIPT
+  // =========================
+
+  useEffect(() => {
+    const script = document.createElement("script");
+
+    script.src = "https://accounts.google.com/gsi/client";
+    script.async = true;
+    script.defer = true;
+
+    script.onload = () => {
+      if (window.google) {
+        window.google.accounts.id.initialize({
+          client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+
+          callback: handleGoogleResponse,
+        });
+      }
+    };
+
+    document.body.appendChild(script);
+
+    return () => {
+      document.body.removeChild(script);
+    };
+  }, []);
+
+  // =========================
+  // NORMAL LOGIN
+  // =========================
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -37,14 +69,60 @@ function Login({ onRegister, onLoginSuccess }) {
     }
   };
 
+  // =========================
+  // GOOGLE LOGIN RESPONSE
+  // =========================
+
+  const handleGoogleResponse = async (response) => {
+    try {
+      setError("");
+      setLoading(true);
+
+      const result = await api.post("/auth/google", {
+        credential: response.credential,
+      });
+
+      localStorage.setItem("token", result.data.token);
+
+      onLoginSuccess(result.data.user);
+    } catch (error) {
+      console.log("GOOGLE LOGIN ERROR:", error);
+
+      setError(
+        error.response?.data?.message ||
+          "Google login failed. Please try again."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // =========================
+  // GOOGLE BUTTON
+  // =========================
+
   const handleGoogleLogin = () => {
-    setError(
-      "Google login requires Google OAuth configuration. Email login is ready."
-    );
+    setError("");
+
+    if (!window.google) {
+      setError("Google login is still loading. Please try again.");
+      return;
+    }
+
+    if (!import.meta.env.VITE_GOOGLE_CLIENT_ID) {
+      setError("Google Client ID is missing.");
+      return;
+    }
+
+    window.google.accounts.id.prompt();
   };
 
   return (
     <div className="auth-page">
+      {/* =========================
+          LEFT SIDE
+      ========================= */}
+
       <div className="auth-image-side login-image">
         <div className="image-overlay"></div>
 
@@ -60,6 +138,7 @@ function Login({ onRegister, onLoginSuccess }) {
 
           <div className="image-feature">
             <span>✓</span>
+
             <div>
               <strong>Simple task management</strong>
               <small>Everything in one place</small>
@@ -68,6 +147,7 @@ function Login({ onRegister, onLoginSuccess }) {
 
           <div className="image-feature">
             <span>✓</span>
+
             <div>
               <strong>Work smarter</strong>
               <small>Focus on what matters</small>
@@ -76,11 +156,18 @@ function Login({ onRegister, onLoginSuccess }) {
         </div>
       </div>
 
+      {/* =========================
+          RIGHT SIDE
+      ========================= */}
+
       <div className="auth-form-side">
         <div className="auth-card">
           <div className="auth-heading">
             <span className="mini-logo">✓</span>
-            <span className="brand-name">TaskFlow</span>
+
+            <span className="brand-name">
+              TaskFlow
+            </span>
 
             <h2>Welcome back</h2>
 
@@ -89,7 +176,15 @@ function Login({ onRegister, onLoginSuccess }) {
             </p>
           </div>
 
-          {error && <div className="error-message">{error}</div>}
+          {error && (
+            <div className="error-message">
+              {error}
+            </div>
+          )}
+
+          {/* =========================
+              NORMAL LOGIN FORM
+          ========================= */}
 
           <form onSubmit={handleSubmit}>
             <div className="input-group">
@@ -99,18 +194,23 @@ function Login({ onRegister, onLoginSuccess }) {
                 type="email"
                 placeholder="you@example.com"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) =>
+                  setEmail(e.target.value)
+                }
               />
             </div>
 
             <div className="input-group">
               <div className="password-label">
                 <label>Password</label>
+
                 <button
                   type="button"
                   className="forgot-btn"
                   onClick={() =>
-                    setError("Password reset can be added later.")
+                    setError(
+                      "Password reset can be added later."
+                    )
                   }
                 >
                   Forgot password?
@@ -121,7 +221,9 @@ function Login({ onRegister, onLoginSuccess }) {
                 type="password"
                 placeholder="Enter your password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) =>
+                  setPassword(e.target.value)
+                }
               />
             </div>
 
@@ -130,28 +232,52 @@ function Login({ onRegister, onLoginSuccess }) {
               className="primary-btn"
               disabled={loading}
             >
-              {loading ? "Signing in..." : "Sign in"}
+              {loading
+                ? "Signing in..."
+                : "Sign in"}
             </button>
           </form>
 
+          {/* =========================
+              DIVIDER
+          ========================= */}
+
           <div className="divider">
             <span></span>
+
             <p>OR</p>
+
             <span></span>
           </div>
+
+          {/* =========================
+              GOOGLE LOGIN
+          ========================= */}
 
           <button
             type="button"
             className="google-btn"
             onClick={handleGoogleLogin}
+            disabled={loading}
           >
-            <span className="google-icon">G</span>
+            <span className="google-icon">
+              G
+            </span>
+
             Continue with Google
           </button>
 
+          {/* =========================
+              REGISTER
+          ========================= */}
+
           <p className="switch-text">
             Don't have an account?{" "}
-            <button type="button" onClick={onRegister}>
+
+            <button
+              type="button"
+              onClick={onRegister}
+            >
               Create account
             </button>
           </p>
